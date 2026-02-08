@@ -1,12 +1,17 @@
 "use client";
 
-import { DocumentData } from "@/services/firestore";
-import { deleteDocument } from "@/services/firestore";
-import { deleteFileFromS3, getPresignedDownloadUrl } from "@/app/actions/storage";
+import { DocumentData, deleteDocument } from "@/services/firestore";
+import { deleteFileFromS3 } from "@/app/actions/storage";
 import { Trash2, Download, FileText, Loader2, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import clsx from "clsx";
 
-// ... DocumentListProps interface
+interface DocumentListProps {
+    documents: DocumentData[];
+    isAdmin: boolean;
+    onRefresh: () => void;
+    awsConfig: { bucket: string; region: string };
+}
 
 export default function DocumentList({ documents, isAdmin, onRefresh, awsConfig }: DocumentListProps) {
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -21,12 +26,29 @@ export default function DocumentList({ documents, isAdmin, onRefresh, awsConfig 
     }, []);
 
     const markAsDownloaded = (id: string) => {
-        const updated = [...downloadedIds, id];
-        setDownloadedIds(updated);
-        localStorage.setItem("downloadedDocs", JSON.stringify(updated));
+        if (!downloadedIds.includes(id)) {
+            const updated = [...downloadedIds, id];
+            setDownloadedIds(updated);
+            localStorage.setItem("downloadedDocs", JSON.stringify(updated));
+        }
     };
 
-    // ... handleDelete ...
+    const handleDelete = async (doc: DocumentData) => {
+        if (!confirm(`Delete ${doc.title}?`)) return;
+        if (!doc.id) return;
+
+        setDeletingId(doc.id);
+        try {
+            await deleteFileFromS3(doc.s3Key);
+            await deleteDocument(doc.id);
+            onRefresh(); // Trigger parent refresh
+        } catch (error) {
+            console.error("Failed to delete", error);
+            alert("Failed to delete document");
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     const handleDownload = (doc: DocumentData) => {
         let downloadUrl = doc.fileUrl;
@@ -71,12 +93,22 @@ export default function DocumentList({ documents, isAdmin, onRefresh, awsConfig 
                                 onClick={() => handleDownload(doc)}
                                 disabled={downloadingId === doc.id}
                                 className={clsx(
-                                    "p-2 disabled:opacity-50",
-                                    isDownloaded ? "text-green-600 hover:text-green-700" : "text-gray-400 hover:text-blue-600"
+                                    "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center",
+                                    isDownloaded
+                                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                                 )}
-                                title={isDownloaded ? "Downloaded" : "Download"}
+                                title={isDownloaded ? "Open File" : "Download File"}
                             >
-                                {downloadingId === doc.id ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
+                                {downloadingId === doc.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : isDownloaded ? (
+                                    <>Open</>
+                                ) : (
+                                    <>
+                                        <Download className="h-4 w-4 mr-1" /> Download
+                                    </>
+                                )}
                             </button>
 
                             {isAdmin && (
@@ -99,8 +131,3 @@ export default function DocumentList({ documents, isAdmin, onRefresh, awsConfig 
         </ul>
     );
 }
-
-// Helper to make clsx available if not already import
-import clsx from "clsx";
-
-
