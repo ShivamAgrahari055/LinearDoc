@@ -13,16 +13,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-function getFirebaseApp() {
-  if (typeof window === "undefined") {
-    // Prevent Firebase from running during SSR
-    throw new Error("Firebase should not be initialized on the server");
-  }
+// DO NOT throw. Just guard.
+const app =
+  typeof window !== "undefined"
+    ? getApps().length
+      ? getApp()
+      : initializeApp(firebaseConfig)
+    : null;
 
-  return getApps().length ? getApp() : initializeApp(firebaseConfig);
-}
-
-const app = getFirebaseApp();
-
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const auth = app ? getAuth(app) : null;
+export const db = app ? getFirestore(app) : null;
