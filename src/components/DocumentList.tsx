@@ -6,7 +6,7 @@ import { Trash2, Download, FileText, Loader2, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import clsx from "clsx";
 
-interface DocumentListProps {
+export interface DocumentListProps {
     documents: DocumentData[];
     isAdmin: boolean;
     onRefresh: () => void;
