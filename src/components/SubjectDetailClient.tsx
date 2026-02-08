@@ -38,7 +38,7 @@ export default function SubjectDetailClient({ id, awsConfig }: SubjectDetailClie
     const [loading, setLoading] = useState(true);
 
     const fetchSubject = async () => {
-        if (!id) return;
+        if (!id || !db) return;
         try {
             const docRef = doc(db, "subjects", id);
             const docSnap = await getDoc(docRef);
@@ -51,7 +51,7 @@ export default function SubjectDetailClient({ id, awsConfig }: SubjectDetailClie
     };
 
     const fetchDocuments = async () => {
-        if (!id) return;
+        if (!id || !db) return;
         try {
             const docs = await getDocumentsBySubject(id);
             setDocuments(docs);
@@ -61,7 +61,7 @@ export default function SubjectDetailClient({ id, awsConfig }: SubjectDetailClie
     };
 
     const fetchSubmissions = async () => {
-        if (!id || user?.role !== 'admin') return;
+        if (!id || user?.role !== 'admin' || !db) return;
         try {
             const subs = await getSubmissionsBySubject(id);
             setSubmissions(subs);

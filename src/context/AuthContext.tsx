@@ -18,20 +18,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-       
+        if (!auth || !db) {
+            console.warn("Firebase not initialized");
+            setLoading(false);
+            return;
+        }
 
-         
+        const firestore = db;
+
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+
+
+
             console.log("Auth State Changed:", firebaseUser?.email);
             if (firebaseUser) {
                 try {
                     // Fetch user role from Firestore
-                    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+                    const userDoc = await getDoc(doc(firestore, "users", firebaseUser.uid));
                     if (userDoc.exists()) {
                         const userData = userDoc.data() as UserProfile;
                         setUser({ ...userData, uid: firebaseUser.uid, email: firebaseUser.email });
                     } else {
-                        // Fallback if user doc doesn't exist yet
+                        // Fallback if user document doesn't exist yet
                         console.warn("User document not found in Firestore, using default student role.");
                         setUser({
                             uid: firebaseUser.uid,
