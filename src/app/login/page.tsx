@@ -17,6 +17,10 @@ export default function Login() {
         setError("");
 
         try {
+            if (!auth) {
+                setError("Firebase specific error: Auth not initialized");
+                return;
+            }
             await signInWithEmailAndPassword(auth, email, password);
             router.push("/");
         } catch (err: any) {

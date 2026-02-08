@@ -24,6 +24,10 @@ export default function Signup() {
         }
 
         try {
+            if (!auth || !db) {
+                setError("Firebase not initialized");
+                return;
+            }
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             // Create user doc in Firestore
             await setDoc(doc(db, "users", userCredential.user.uid), {

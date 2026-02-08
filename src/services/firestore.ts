@@ -40,21 +40,25 @@ export interface DocumentData {
 
 // Subjects
 export const addSubject = async (name: string, code: string) => {
+    if (!db) throw new Error("Firestore not initialized");
     return await addDoc(collection(db, "subjects"), { name, code });
 };
 
 export const getSubjects = async () => {
+    if (!db) throw new Error("Firestore not initialized");
     const q = query(collection(db, "subjects"));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subject));
 };
 
 export const deleteSubject = async (id: string) => {
+    if (!db) throw new Error("Firestore not initialized");
     await deleteDoc(doc(db, "subjects", id));
 };
 
 // Documents
 export const addDocument = async (data: Omit<DocumentData, "id" | "createdAt">) => {
+    if (!db) throw new Error("Firestore not initialized");
     return await addDoc(collection(db, "documents"), {
         ...data,
         createdAt: serverTimestamp()
@@ -62,6 +66,7 @@ export const addDocument = async (data: Omit<DocumentData, "id" | "createdAt">) 
 };
 
 export const getDocumentsBySubject = async (subjectId: string) => {
+    if (!db) throw new Error("Firestore not initialized");
     const q = query(collection(db, "documents"), where("subjectId", "==", subjectId));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DocumentData));
@@ -82,11 +87,13 @@ export interface SubmissionData {
 // ... existing code ...
 
 export const deleteDocument = async (id: string) => {
+    if (!db) throw new Error("Firestore not initialized");
     await deleteDoc(doc(db, "documents", id));
 };
 
 // Submissions
 export const addSubmission = async (data: Omit<SubmissionData, "id" | "submittedAt">) => {
+    if (!db) throw new Error("Firestore not initialized");
     return await addDoc(collection(db, "submissions"), {
         ...data,
         submittedAt: serverTimestamp()
@@ -94,19 +101,23 @@ export const addSubmission = async (data: Omit<SubmissionData, "id" | "submitted
 };
 
 export const getSubmissionsBySubject = async (subjectId: string) => {
+    if (!db) throw new Error("Firestore not initialized");
     const q = query(collection(db, "submissions"), where("subjectId", "==", subjectId));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SubmissionData));
 };
 
 export const deleteSubmission = async (id: string) => {
+    if (!db) throw new Error("Firestore not initialized");
     await deleteDoc(doc(db, "submissions", id));
 };
 
 export const deleteSubmissionsBySubject = async (subjectId: string) => {
-    const q = query(collection(db, "submissions"), where("subjectId", "==", subjectId));
+    if (!db) throw new Error("Firestore not initialized");
+    const firestore = db;
+    const q = query(collection(firestore, "submissions"), where("subjectId", "==", subjectId));
     const snapshot = await getDocs(q);
-    const deletePromises = snapshot.docs.map(docSnap => deleteDoc(doc(db, "submissions", docSnap.id)));
+    const deletePromises = snapshot.docs.map(docSnap => deleteDoc(doc(firestore, "submissions", docSnap.id)));
     await Promise.all(deletePromises);
 };
 
