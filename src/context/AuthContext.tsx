@@ -18,10 +18,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-       // const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (!auth) return;
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+       
 
-          const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+         
             console.log("Auth State Changed:", firebaseUser?.email);
             if (firebaseUser) {
                 try {
